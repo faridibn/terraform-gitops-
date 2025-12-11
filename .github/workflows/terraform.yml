@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - stage
+      - stag
     paths:
       - terraform/**
   pull_request:
