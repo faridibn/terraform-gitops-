@@ -1,0 +1,50 @@
+name: "vprofile iac"
+on:
+  push:
+    branches:
+      - main
+      - stage
+    paths:
+      - terraform/**
+  pull:
+    branches:
+      - main
+    paths:
+      - terraform/**
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE}}
+  AWS_REGION: ap-south-1
+  EKS_CLUSTER: vprofile-eks
+
+jobs:
+  terraform:
+    name: "apply"
+    runs-on: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: setup terraform version
+        uses: hashicorp/setup-terraform@v2
+      - name: terraform init
+        id: init
+        run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
+      - name: terraform fmt
+        id: fmt
+        run: terraform fmt -check
+      - name: validate
+        id: validate
+        run: terraform validate
+      - name: terraform plan
+        id: plan
+        run: terraform plan -no-color -input=false -out planfile
+        continue-on-error: true
+      - name: plan status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
