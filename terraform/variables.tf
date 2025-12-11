@@ -10,4 +10,4 @@ variable "clusterName" {
   default     = "farid-cluster"
 }
 
-#faridbhaidevops
+#farid
